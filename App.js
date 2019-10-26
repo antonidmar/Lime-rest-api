@@ -22,6 +22,9 @@ export default class App extends Component {
     super(props);
     this.state = {
       average: 0,
+      averagePerMonth: 0,
+      companies: 0,
+      customersWonDeal: {},
       next: '',
       limers: []
     };
@@ -43,6 +46,9 @@ export default class App extends Component {
         const limers = [...currentLimers, ...newLimers];
         this.setState({
           average: this.averageDealValue(limers),
+          averagePerMonth: this.averageDealValuePerMonth(limers),
+          companies: this.companies(limers),
+          customersWonDeal: this.companiesWonDeals(limers),
           limers,
           next: url.replace(API_URL, PROXY_URL) + "?" + nextParams
         });
@@ -67,7 +73,32 @@ export default class App extends Component {
       const closedDate = new Date(deal.closeddate);
       return closedDate.getFullYear() === 2018
     }).map(deal => deal.value);
-    return deals.reduce((acc, next) => acc + next)/deals
+    return deals.reduce((acc, next) => acc + next)/deals.length/12
+  }
+
+  companies(data){
+    const deals = 
+    data.filter(deal => {
+      const closedDate = new Date(deal.closeddate);
+      return closedDate.getFullYear() === 2018
+      }).map(deal => deal._id && deal.company)
+      return deals + ','
+    }
+
+  companiesWonDeals(data) {
+    const deals =
+    data.filter(deal => {
+      const closedDate = new Date(deal.closeddate);
+      return closedDate.getFullYear() === 2018
+    }).map(deal => ({
+      value: deal.value, 
+      company: deal.company
+    })).reduce((acc, next) => {
+      const currentCompanyValue = acc[next.company] || 0;
+      acc[next.company] = next.value + currentCompanyValue;
+      return acc;
+    },{});
+    return deals 
   }
 
   onLoadMore(event){
@@ -94,17 +125,24 @@ export default class App extends Component {
   }
 
   render() {
-    const { limers, average } = this.state;
- 
-    
-    
-
+    const { limers, average, averagePerMonth, companies, customersWonDeal } = this.state;
     return (
-      <div className="container">
-        <h4 className="center">{ average }</h4>
+      //Styling
+      <div className="App">
+        
+
+        <h1>{ average }</h1>
+        
+        
         <button onClick = {this.onLoadMore.bind(this)}>load more</button>
-      </div>
+        
+         <p className="month">{ averagePerMonth }</p>
        
+       <p className="customer">{ companies }</p>
+       
+         <ul className="customersWonDeals">{ Object.entries(customersWonDeal).map(([k, v]) => (<li>{k}: {v}</li>)) }</ul>
+       
+      </div>
     );
     
   }
